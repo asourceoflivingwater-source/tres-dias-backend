@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.core.validators import FileExtensionValidator
-from core.models import BaseModel, AuditModel
+from apps.core.models import BaseModel, AuditModel
 
 User = get_user_model()
 
