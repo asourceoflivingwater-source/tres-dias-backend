@@ -81,7 +81,7 @@ class DepartmentSection(BaseModel):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['department', 'type'], name='unique_section_type_per_department')
+            models.UniqueConstraint(fields=['department, type'], name='unique_section_type_per_department')
         ]
 
 class MediaAsset(BaseModel):
