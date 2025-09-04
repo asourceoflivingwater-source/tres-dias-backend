@@ -7,7 +7,7 @@ from .serializers import DepartmentSerializer, SectionSerializer, DepartmentMemb
 from django.shortcuts import get_object_or_404
 from django.db.utils import IntegrityError
 from apps.users.models import User
-from apps.users.permissions import IsDepartmentMember, IsClergy, IsRectorate
+from apps.users.permissions import IsDepartmentMember, IsChief
 
 class DepartmentsListView(APIView):
 
@@ -35,9 +35,9 @@ class DepartmentSectionsView(APIView):
     def get_permissions(self):
     
         if self.request.user.is_authenticated:
-            return [IsAdminUser | IsDepartmentMember | IsClergy | IsRectorate]
+            return [IsAdminUser() or IsDepartmentMember()]
         else:
-            return [AllowAny]
+            return [AllowAny()]
     
     def get(self, request, slug):
         if request.user.is_authenticated:
@@ -54,11 +54,11 @@ class DepartmentSectionsView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
      
 class DepartmentAddMemberView(APIView):
-    permission_classes = [IsAdminUser]
-    def post(self, request, id):
+    permission_classes = [IsAdminUser | IsChief]
+    def post(self, request, department_id):
         user_email= request.data.get("user_email")
         role = request.data.get("role")
-        department = Department.objects.get(id=id)
+        department = Department.objects.get(id=department_id)
         user = User.objects.get(email=user_email)
         
         try:
@@ -74,12 +74,13 @@ class DepartmentAddMemberView(APIView):
                 )
 
         serializer = DepartmentMemberSerializer(department_member)
-        return Response({"message": "Department member removed successfully",
+        return Response({"message": "Department member added successfully",
                         "added_member": serializer.data
                 }, status=status.HTTP_201_CREATED)
     
 class DepartmentEditMemberView(APIView):
     
+    permission_classes = [IsAdminUser | IsChief]
     def patch(self, request, department_id, user_id):
         department_member = get_object_or_404(DepartmentMember, 
                                               user_id=user_id,

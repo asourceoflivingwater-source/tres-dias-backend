@@ -9,7 +9,7 @@ class DepartmentSerializer(serializers.ModelSerializer):
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = DepartmentSection
-        fields = ["department","type"]
+        fields = ["department","type","title"]
 
 class DepartmentMemberSerializer(serializers.ModelSerializer):
     class Meta:

@@ -1,21 +1,32 @@
-from rest_framework.permissions import BasePermission
+from rest_framework.permissions import BasePermission, IsAuthenticated
 from apps.department.models import Department, DepartmentMember
+from django.shortcuts import get_object_or_404
+from apps.department.models import DepartmentRole
+from logging import getLogger
 
-class IsDepartmentMember(BasePermission):
+logger = getLogger(__name__)
+
+class IsDepartmentMember(IsAuthenticated):
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        
+        if not super().has_permission(request, view):
             return False
+        
         department_slug = view.kwargs.get('slug')
-        if not department_slug:
+        department_id = view.kwargs.get('id')
+        if not department_slug and not department_id:
             return False
         try:
             
-            department = Department.objects.get(slug=department_slug)
+            if department:
+                department = Department.objects.get(slug=department_slug)
+            else:
+                department = Department.objects.get(id=department_id)
             is_member = DepartmentMember.objects.filter(
-                user=request.user,
-                department=department,
-                is_active=True
+            user=request.user,
+            department=department,
+            is_active=True
             ).exists()
             
             return is_member
@@ -26,20 +37,20 @@ class IsDepartmentMember(BasePermission):
 class IsRectorate(BasePermission):
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
         return request.user.is_rectorate
     
 class IsClergy(BasePermission):
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
+
         return request.user.clergy
 
 class IsChief(BasePermission):
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
+        department_member = get_object_or_404(DepartmentMember, 
+                                                user_id=request.user.id,
+                                                department_id=view.kwargs.get('department_id'))
+        return department_member.role == DepartmentRole.CHIEF
+            
         
