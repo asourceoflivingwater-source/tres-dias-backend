@@ -2,12 +2,14 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
-from .models import Department, DepartmentSection, DepartmentMember
-from .serializers import DepartmentSerializer, SectionSerializer, DepartmentMemberSerializer
+from .models import Department, DepartmentMember
+from .serializers import DepartmentSerializer, DepartmentMemberSerializer
 from django.shortcuts import get_object_or_404
 from django.db.utils import IntegrityError
 from apps.users.models import User
-from apps.users.permissions import IsDepartmentMember, IsChief
+from apps.users.permissions import IsDepartmentMember, IsChief, IsClergy, IsRectorate
+from apps.sections.models import DepartmentSection
+from apps.sections.serializers import DepartmentSectionSerializer
 
 class DepartmentsListView(APIView):
 
@@ -35,14 +37,14 @@ class DepartmentSectionsView(APIView):
     def get_permissions(self):
     
         if self.request.user.is_authenticated:
-            return [IsAdminUser() or IsDepartmentMember()]
+            return [IsAdminUser() or IsDepartmentMember() or IsClergy() or IsRectorate()]
         else:
             return [AllowAny()]
     
     def get(self, request, slug):
         if request.user.is_authenticated:
             sections = DepartmentSection.objects.filter(department__slug=slug)
-            serializer = SectionSerializer(sections, many=True)
+            serializer = DepartmentSectionSerializer(sections, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             sections = DepartmentSection.objects.filter(
@@ -50,7 +52,7 @@ class DepartmentSectionsView(APIView):
                 visibility='public',
                 status='published'
             )
-            serializer = SectionSerializer(sections, many=True)
+            serializer = DepartmentSectionSerializer(sections, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
      
 class DepartmentAddMemberView(APIView):
