@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     "apps.department",
     "apps.core",
     "apps.users",
-    "apps.sections"
+    "apps.sections",
+    "apps.adminapp"
 ]
 
 MIDDLEWARE = [

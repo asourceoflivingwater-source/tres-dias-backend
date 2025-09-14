@@ -12,22 +12,3 @@ class BaseModel(models.Model):
         abstract = True
         ordering = ["-created_at"]
 
-class AuditModel(BaseModel):
-
-    created_by = models.ForeignKey(
-        'users.User',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='%(class)s_created'
-    )
-    updated_by = models.ForeignKey(
-        'users.User',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='%(class)s_updated'
-    )
-
-    class Meta:
-        abstract = True
