@@ -13,8 +13,6 @@ class DepartmentRole(models.TextChoices):
     SECRETARY = 'secretary', 'Secretary'
     TEAM_MEMBER = 'team_member', 'Team Member'
     VIEWER = 'viewer', 'Viewer'
-    RECTORATE = 'rectorate', 'Rectorate'
-    CLERGY = 'clergy', 'Clergy'
 
 class Department(BaseModel):
 

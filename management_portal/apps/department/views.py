@@ -4,56 +4,63 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
 from .models import Department, DepartmentMember
 from .serializers import DepartmentSerializer, DepartmentMemberSerializer
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, get_list_or_404
 from django.db.utils import IntegrityError
 from apps.users.models import User
-from apps.users.permissions import IsDepartmentMember, IsChief, IsClergy, IsRectorate
+from apps.users.permissions import IsChief
 from apps.sections.models import DepartmentSection
 from apps.sections.serializers import DepartmentSectionSerializer
+from django.db.models import Q
+from django.db.models import Q, F, Func, Value
 
 class DepartmentsListView(APIView):
 
     def get(self, request):
-        departments = Department.objects.all()
+        departments = get_list_or_404(Department)
         serializer = DepartmentSerializer(departments, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class DepartmentProfileView(APIView):
-
+    
     def get(self, request, slug):
-        try:
-            department = get_object_or_404(Department, slug=slug)
-            serializer = DepartmentSerializer(department)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        
-        except Department.DoesNotExist:
-                return Response(
-                    {"error": "Department not found"}, 
-                    status=status.HTTP_404_NOT_FOUND
-                )
-
+        department = get_object_or_404(Department, slug=slug)
+        serializer = DepartmentSerializer(department)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 class DepartmentSectionsView(APIView):
-    
-    def get_permissions(self):
-    
-        if self.request.user.is_authenticated:
-            return [IsAdminUser() or IsDepartmentMember() or IsClergy() or IsRectorate()]
-        else:
-            return [AllowAny()]
-    
+
+    permission_classes = [AllowAny] 
+
     def get(self, request, slug):
-        if request.user.is_authenticated:
-            sections = DepartmentSection.objects.filter(department__slug=slug)
-            serializer = DepartmentSectionSerializer(sections, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+        qs = DepartmentSection.objects.filter(department__slug=slug)
+
+        if not request.user.is_authenticated:
+            qs = qs.filter(visibility="public", status="published")
+
+        elif request.user.is_staff:
+            pass
+
+        elif getattr(request.user, "is_clergy", False) or getattr(request.user, "is_rectorate", False):
+            qs = qs.filter(status="published")
+
         else:
-            sections = DepartmentSection.objects.filter(
-                department__slug=slug,
-                visibility='public',
-                status='published'
-            )
-            serializer = DepartmentSectionSerializer(sections, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            qs = qs.filter(
+                        
+                Q(visibility="public", status="published")
+                | Q(
+                    department__members__user=request.user,
+                    department__members__is_active=True,
+                    department__members__role="chief"
+                )
+                | Q(
+                    department__members__user=request.user,
+                    department__members__is_active=True,
+                    department__members__role__in=F("visible_for_roles")
+                )).distinct()
+            
+        serializer = DepartmentSectionSerializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+        
      
 class DepartmentAddMemberView(APIView):
     permission_classes = [IsAdminUser | IsChief]

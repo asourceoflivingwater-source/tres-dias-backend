@@ -55,12 +55,31 @@ class DepartmentSection(BaseModel):
             models.UniqueConstraint(fields=['department', 'type'], name='unique_section_type_per_department')
         ]
 
+    def sync_from_permissions(self):
+        perms = self.permissions.all()
+        self.visible_for_roles = [p.role for p in perms if p.can_view]
+        self.allow_edit_roles = [p.role for p in perms if p.can_edit]
+        self.allow_publish_roles = [p.role for p in perms if p.can_publish]
+        self.save(update_fields=["visible_for_roles", "allow_edit_roles", "allow_publish_roles"])
+    
+
+ 
+
 class SectionPermission(BaseModel):
-    section = models.ForeignKey(DepartmentSection, on_delete=models.CASCADE)
+    section = models.ForeignKey(DepartmentSection, on_delete=models.CASCADE, related_name="permissions")
     role = models.CharField(max_length=20, choices=DepartmentRole.choices)
     can_view = models.BooleanField()
     can_edit = models.BooleanField()
     can_publish = models.BooleanField()
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.section.sync_from_permissions()
+
+    def delete(self, *args, **kwargs):
+        section = self.section
+        super().delete(*args, **kwargs)
+        section.sync_from_permissions()
 
 class MediaAsset(BaseModel):
 
@@ -74,20 +93,6 @@ class MediaAsset(BaseModel):
     caption = models.CharField(max_length=255, blank=True)
     meta = models.JSONField(default=dict, blank=True)
 
-class AuditLog(BaseModel):
-    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_actions')
-    department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='audit_logs')
-    section = models.ForeignKey(DepartmentSection, on_delete=models.SET_NULL, null=True, blank=True, related_name='audit_logs')
-    action = models.CharField(max_length=100)
-    payload = models.JSONField(default=dict, blank=True)
-
-    class Meta:
-        ordering = ['-created_at']
-        indexes = [
-            models.Index(fields=['department', 'created_at']),
-            models.Index(fields=['actor', 'created_at']),
-        ]
-
 class VersionedSection(BaseModel):
     section = models.ForeignKey(DepartmentSection, on_delete=models.CASCADE, related_name='versions')
     version = models.PositiveIntegerField()
@@ -100,3 +105,5 @@ class VersionedSection(BaseModel):
             models.UniqueConstraint(fields=['section', 'version'], name='unique_section_version')
         ]
         ordering = ['section', '-version']
+    
+

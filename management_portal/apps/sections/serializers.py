@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
-from .models import DepartmentSection, MediaAsset, SectionPermission
+from .models import DepartmentSection, VersionedSection, MediaAsset, SectionPermission
 
 class DepartmentSectionSerializer(ModelSerializer):
     class Meta:
@@ -8,6 +8,11 @@ class DepartmentSectionSerializer(ModelSerializer):
         fields = ["department","type", "title", 
                   "content_draft", "content_published", "visibility", "visible_for_roles", 
                   "allow_edit_roles", "allow_publish_roles", "status"]
+        
+class VersionSectionSerializer(ModelSerializer):
+    class Meta:
+        model = VersionedSection
+        fields = ['id', 'section', 'version', 'content', 'created_at']
         
 class SectionPermissionSerializer(ModelSerializer):
     class Meta:

@@ -4,7 +4,7 @@ from .models import Department, DepartmentMember
 class DepartmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Department
-        fields = ["title","slug","description","chief"]
+        fields = ["id","title","slug","description","chief"]
 
 class DepartmentMemberSerializer(serializers.ModelSerializer):
     class Meta:

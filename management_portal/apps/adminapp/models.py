@@ -15,6 +15,13 @@ class AuditLog(BaseModel):
     section = models.ForeignKey(DepartmentSection, on_delete=models.SET_NULL, null=True)
     action = models.CharField(max_length=255, default="read_action")
     payload = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['department', 'created_at']),
+            models.Index(fields=['actor', 'created_at']),
+    ]
 
 class AdminDepartmentComment(BaseModel):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='comments')
