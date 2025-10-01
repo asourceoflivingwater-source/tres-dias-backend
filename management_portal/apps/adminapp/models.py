@@ -23,7 +23,7 @@ class AuditLog(BaseModel):
             models.Index(fields=['actor', 'created_at']),
     ]
 
-class AdminDepartmentComment(BaseModel):
+class Comment(BaseModel):
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='department_comments')
     author_role = models.CharField(max_length=20, choices=DepartmentRole.choices, default=DepartmentRole.ADMIN)
@@ -40,8 +40,8 @@ class AdminDepartmentComment(BaseModel):
             models.Index(fields=['author', 'created_at']),
         ]
 
-class AdminCommentAttachment(BaseModel):
-    comment = models.ForeignKey(AdminDepartmentComment, on_delete=models.CASCADE, related_name='attachments')
+class CommentAttachment(BaseModel):
+    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, related_name='attachments')
     file = models.FileField(
         upload_to='comment_attachments/%Y/%m/%d/',
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'zip'])]

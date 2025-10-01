@@ -5,9 +5,10 @@ from .models import DepartmentSection, VersionedSection, MediaAsset, SectionPerm
 class DepartmentSectionSerializer(ModelSerializer):
     class Meta:
         model = DepartmentSection
-        fields = ["department","type", "title", 
+        fields = ["id", "department","type", "title", 
                   "content_draft", "content_published", "visibility", "visible_for_roles", 
                   "allow_edit_roles", "allow_publish_roles", "status"]
+        readnly_fields = ["id", ]
         
 class VersionSectionSerializer(ModelSerializer):
     class Meta:

@@ -4,7 +4,7 @@ from django.db import models
 from apps.core.models import BaseModel
 
 class User(AbstractUser, BaseModel):
-  
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     is_rectorate = models.BooleanField(default=False)
     is_clergy = models.BooleanField(default=False)

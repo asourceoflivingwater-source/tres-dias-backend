@@ -1,10 +1,10 @@
 from rest_framework.serializers import ModelSerializer
-from .models import AdminDepartmentComment, AdminCommentAttachment
+from .models import Comment, CommentAttachment
 
-class DepartmentCommentSerializer(ModelSerializer):
+class CommentSerializer(ModelSerializer):
 
     class Meta:
-        model = AdminDepartmentComment
+        model = Comment
         fields = ["id", "department", "author", "author_role",
                 "label", "body", "tags", "meta"]
         
@@ -19,7 +19,7 @@ class DepartmentCommentSerializer(ModelSerializer):
 class CommentAttachmentSerializer(ModelSerializer):
 
     class Meta:
-        model = AdminCommentAttachment
+        model = CommentAttachment
         fields = ["id", "comment", "file", "filename", "meta"]
     
     def to_representation(self, instance):

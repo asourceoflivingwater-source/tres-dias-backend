@@ -1,31 +1,56 @@
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
 from .models import Department, DepartmentMember
 from .serializers import DepartmentSerializer, DepartmentMemberSerializer
-from django.shortcuts import get_object_or_404, get_list_or_404
-from django.db.utils import IntegrityError
 from apps.users.models import User
 from apps.users.permissions import IsChief
 from apps.sections.models import DepartmentSection
 from apps.sections.serializers import DepartmentSectionSerializer
-from django.db.models import Q
-from django.db.models import Q, F, Func, Value
+from django.db.models import Q, F
+from django.shortcuts import get_object_or_404
 
-class DepartmentsListView(APIView):
+class DepartmentsListView(ListAPIView):
+    permission_classes=[AllowAny]
+    queryset = Department.objects.all()
+    serializer_class= DepartmentSerializer
 
-    def get(self, request):
-        departments = get_list_or_404(Department)
-        serializer = DepartmentSerializer(departments, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class DepartmentProfileView(RetrieveUpdateDestroyAPIView):
+    permission_classes=[IsAdminUser]
+    queryset = Department.objects.all()
+    serializer_class = DepartmentSerializer
 
-class DepartmentProfileView(APIView):
+class DepartmentMemberView(ListCreateAPIView):
+    permission_classes = [IsAdminUser | IsChief]
+    serializer_class= DepartmentMemberSerializer
+    def get_queryset(self):
+        return DepartmentMember.objects.filter(department_id=self.kwargs["department_id"])
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+        user = User.objects.get(email=data["user_email"])
+        data['user'] = user.id
+        data['department'] = self.kwargs["department_id"]
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
-    def get(self, request, slug):
-        department = get_object_or_404(Department, slug=slug)
-        serializer = DepartmentSerializer(department)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class DepartmentMemberUpdateView(RetrieveUpdateDestroyAPIView):
+    permission_classes = [IsAdminUser | IsChief]
+    serializer_class = DepartmentMemberSerializer
+    queryset = DepartmentMember.objects.all()
+
+    def get_object(self):
+        queryset = self.get_queryset()
+       
+        obj = get_object_or_404(queryset, department_id=self.kwargs.get('department_id'),
+                                user_id=self.kwargs.get('user_id'))
+        self.check_object_permissions(self.request, obj)
+        return obj
     
 class DepartmentSectionsView(APIView):
 
@@ -62,70 +87,5 @@ class DepartmentSectionsView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
         
      
-class DepartmentAddMemberView(APIView):
-    permission_classes = [IsAdminUser | IsChief]
-    def post(self, request, department_id):
-        user_email= request.data.get("user_email")
-        role = request.data.get("role")
-        department = Department.objects.get(id=department_id)
-        user = User.objects.get(email=user_email)
-        
-        try:
-            department_member = DepartmentMember.objects.create(
-            department=department,
-            user=user,
-            role=role, 
-            )
-        except IntegrityError:
-                return Response(
-                    {"error": "User can join only one department"}, 
-                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
-                )
 
-        serializer = DepartmentMemberSerializer(department_member)
-        return Response({"message": "Department member added successfully",
-                        "added_member": serializer.data
-                }, status=status.HTTP_201_CREATED)
-    
-class DepartmentEditMemberView(APIView):
-    
-    permission_classes = [IsAdminUser | IsChief]
-    def patch(self, request, department_id, user_id):
-        department_member = get_object_or_404(DepartmentMember, 
-                                              user_id=user_id,
-                                              department_id=department_id)
-        serializer = DepartmentMemberSerializer(
-            instance=department_member,
-            data = request.data,
-            partial=True
-        )
-        if serializer.is_valid():
-                serializer.save()
-
-                return Response({
-                    "message": "Department member updated successfully",
-                    "edited_member": serializer.data
-                }, status=status.HTTP_200_OK)
-        
-    def delete(self, request, department_id, user_id):
-        try:
-
-            department_member = get_object_or_404(
-                DepartmentMember, 
-                user_id=user_id,
-                department_id=department_id
-            )
-            serializer = DepartmentMemberSerializer(department_member)
-            department_member.delete()
-            
-            return Response({
-                "message": "Department member removed successfully",
-                "deleted_member": serializer.data
-            }, status=status.HTTP_200_OK)
-        
-        except Exception as e:
-            return Response({
-                "error": "An unexpected error occurred",
-                "details": str(e)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 

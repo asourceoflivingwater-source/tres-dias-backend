@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import AdminDepartmentComment, AdminCommentAttachment, AuditLog
+from .models import Comment, CommentAttachment, AuditLog
 
-admin.site.register(AdminDepartmentComment)
-admin.site.register(AdminCommentAttachment)
+admin.site.register(Comment)
+admin.site.register(CommentAttachment)
 admin.site.register(AuditLog)

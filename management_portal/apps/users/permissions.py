@@ -40,28 +40,43 @@ class IsChief(BasePermission):
             return False
         return obj.members.filter(user=request.user, role='chief', is_active=True).exists()
 
+from rest_framework.permissions import BasePermission
+from django.shortcuts import get_object_or_404
+
 class CanEditSection(BasePermission):
+
     def has_permission(self, request, view):
+        user = request.user
 
-        
-        if getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False):
+        # Staff and superusers always allowed
+        if user and (user.is_staff or user.is_superuser):
             return True
-        
-        
 
-        if not request.user.is_authenticated:
+        # Must be authenticated
+        if not user.is_authenticated:
             return False
-        section_id = view.kwargs.get("section_id") 
-        member = DepartmentMember.objects.filter(user=request.user, is_active=True).first()
-        section = DepartmentSection.objects.filter(id=section_id).first()
+
+        # Only allow for update actions
+        if request.method not in ("PATCH", "PUT"):
+            return False
+
+        section_id = view.kwargs.get("section_id")
+        if not section_id:
+            return False 
+       
+        member = (
+            DepartmentMember.objects
+            .select_related("department")
+            .filter(user=user, is_active=True)
+            .first()
+        )
         if not member:
             return False
-        
-        role = member.role
-        if request.method in ['PATCH', 'PUT']:
-            return role in section.allow_edit_roles or member.role =='chief'
 
-        return False
+        section = get_object_or_404(DepartmentSection, id=section_id)
+        
+        return member.role == "chief" or member.role in section.allow_edit_roles
+
     
 class CanPublishSection(BasePermission):
     def has_permission(self, request, view):
