@@ -8,7 +8,7 @@ class DepartmentSectionSerializer(ModelSerializer):
         fields = ["id", "department","type", "title", 
                   "content_draft", "content_published", "visibility", "visible_for_roles", 
                   "allow_edit_roles", "allow_publish_roles", "status"]
-        readnly_fields = ["id", ]
+        read_only_fields = ["id", ]
         
 class VersionSectionSerializer(ModelSerializer):
     class Meta:
@@ -29,7 +29,7 @@ class MediaAssetSerializer(ModelSerializer):
         if not data.get('kind'):
             ext = data['file'].name.split('.')[-1].lower()
             if ext in ['jpg', 'jpeg', 'png', 'gif']:
-                data['kind'] = 'image'
+                data['kind'] = 'photo'
             elif ext in ['mp4', 'mov', 'avi']:
                 data['kind'] = 'video'
             else:

@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-btj+)-nl#ou_u2dyt!#+^wg8ufdoc^=c_3z3e-_g&9%r9#w(ib"
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -59,6 +59,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.core.middleware.logging.LoggingMiddleware"
 ]
 
 ROOT_URLCONF = "management_portal.urls"
@@ -157,3 +158,5 @@ STORAGES = {
         "BACKEND":"storages.backends.s3boto3.S3StaticStorage"
     }
 }
+
+EXCEPTION_HANDLER='rest_framework.views.exception_handler'

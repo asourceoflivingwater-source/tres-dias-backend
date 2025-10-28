@@ -21,9 +21,13 @@ class CommentView(AuditLogMixin, ListCreateAPIView):
         'label': ['icontains']
     }
 
-    def perform_create(self, serializer):
-        self.comment_update(serializer, action="create comment")
-        return super().perform_create(serializer)
+    def get_audit_payload(self, instance):
+        payload = super().get_audit_payload(instance)
+        payload.update({
+            'label': instance.label,
+            'body': instance.body,
+        })
+        return payload
 
 class CommentDetailView(AuditLogMixin, RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAdminUser]
@@ -31,22 +35,27 @@ class CommentDetailView(AuditLogMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     lookup_field = 'id'
 
-    def perform_update(self, serializer):
-        self.comment_update(serializer, action="update comment")
-        return super().perform_update(serializer)
-    
-    def perform_delete(self, serializer):
-        self.comment_delete(serializer, action="delete comment")
-        return super().perform_delete(serializer)
+    def get_audit_payload(self, instance):
+        payload = super().get_audit_payload(instance)
+        payload.update({
+            'label': instance.label,
+            'body': instance.body,
+        })
+        return payload
         
 class CommentAttachmentsView(AuditLogMixin, ListCreateAPIView): 
     permission_classes= [IsAdminUser]
     queryset = CommentAttachment.objects.all()
     serializer_class = CommentAttachmentSerializer
 
-    def perform_create(self, serializer):
-        self.attachment_update(serializer, action="create attachment")
-        return super().perform_create(serializer)
+    def get_audit_payload(self, instance):
+        payload = super().get_audit_payload(instance)
+        payload.update({
+            'file_url': instance.file.url if instance.file else None,
+            'filename': instance.filename,
+            'comment_id': str(instance.comment_id),
+        })
+        return payload
 
 class CommentAttachmentsDetailView(AuditLogMixin, RetrieveUpdateDestroyAPIView):
     permission_classes=[IsAdminUser]
@@ -54,10 +63,11 @@ class CommentAttachmentsDetailView(AuditLogMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = CommentAttachmentSerializer
     lookup_field = 'id'
     
-    def perform_update(self, serializer):
-        self.attachment_update(serializer, action="update attachment")
-        return super().perform_create(serializer)
-    
-    def perform_delete(self, serializer):
-        self.attachment_delete(serializer, action="delete attachment")
-        return super().perform_create(serializer)
+    def get_audit_payload(self, instance):
+        payload = super().get_audit_payload(instance)
+        payload.update({
+            'file_url': instance.file.url if instance.file else None,
+            'filename': instance.filename,
+            'comment_id': str(instance.comment_id),
+        })
+        return payload

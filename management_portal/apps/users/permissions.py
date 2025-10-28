@@ -2,55 +2,37 @@ from rest_framework.permissions import BasePermission, IsAuthenticated
 from apps.department.models import Department, DepartmentMember
 from apps.sections.models import DepartmentSection
 from logging import getLogger
+from rest_framework.permissions import BasePermission
+from django.shortcuts import get_object_or_404
 
-logger = getLogger(__name__)
 
-class IsDepartmentMember(IsAuthenticated):
-
+class IsStaffOrSuperuser(IsAuthenticated):
     def has_permission(self, request, view):
-        
         if not super().has_permission(request, view):
             return False
         
-        department_slug = view.kwargs.get('slug')
-        department_id = view.kwargs.get('id')
-        if not department_slug and not department_id:
-            return False
-        try:
-            
-            if department:
-                department = Department.objects.get(slug=department_slug)
-            else:
-                department = Department.objects.get(id=department_id)
-            is_member = DepartmentMember.objects.filter(
-            user=request.user,
-            department=department,
-            is_active=True
-            ).exists()
-            
-            return is_member
-            
-        except Department.DoesNotExist:
-            return False
+        if getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False):
+            return True
+        
+        return False
+        
     
-class IsChief(BasePermission):
+class IsChief(IsStaffOrSuperuser):
     def has_object_permission(self, request, view, obj):
         
         if not request.user.is_authenticated:
             return False
         return obj.members.filter(user=request.user, role='chief', is_active=True).exists()
 
-from rest_framework.permissions import BasePermission
-from django.shortcuts import get_object_or_404
 
 class CanEditSection(BasePermission):
 
     def has_permission(self, request, view):
+        if super().has_permission(request, view):
+            return True
+
         user = request.user
 
-        # Staff and superusers always allowed
-        if user and (user.is_staff or user.is_superuser):
-            return True
 
         # Must be authenticated
         if not user.is_authenticated:
@@ -78,14 +60,9 @@ class CanEditSection(BasePermission):
         return member.role == "chief" or member.role in section.allow_edit_roles
 
     
-class CanPublishSection(BasePermission):
+class CanPublishSection(IsStaffOrSuperuser):
     def has_permission(self, request, view):
-
-        
-        if not request.user.is_authenticated:
-            return False
-        
-        if getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False):
+        if super().has_permission(request, view):
             return True
         
         section_id = view.kwargs.get("section_id") 
@@ -104,11 +81,9 @@ class CanPublishSection(BasePermission):
 
         return role in section.allow_publish_roles
 
-class CanViewSection(BasePermission):
+class CanViewSection(IsStaffOrSuperuser):
     def has_permission(self, request, view):
-
-        
-        if getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False):
+        if super().has_permission(request, view):
             return True
         
         if getattr(request.user, "is_rectorate", False) or getattr(request.user, "is_clergy", False):
@@ -125,12 +100,10 @@ class CanViewSection(BasePermission):
 
         return member.role in section.visible_for_roles
     
-class IsChiefOrAdmin(BasePermission):
+class IsChiefOrAdmin(IsStaffOrSuperuser):
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
-            return False
-        
-        if getattr(request.user, "is_staff", False) or getattr(request.user, "is_superuser", False):
+        if super().has_permission(request, view):
             return True
+        
         member = DepartmentMember.objects.filter(user=request.user, is_active=True).first()
         return member.role == 'chief'
