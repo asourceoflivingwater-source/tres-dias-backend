@@ -1,6 +1,6 @@
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import ListCreateAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAdminUser
 from .models import Department, DepartmentMember
@@ -12,7 +12,7 @@ from apps.sections.serializers import DepartmentSectionSerializer
 from django.db.models import Q, F
 from django.shortcuts import get_object_or_404
 
-class DepartmentsListView(ListAPIView):
+class DepartmentsListView(ListCreateAPIView):
     permission_classes=[AllowAny]
     queryset = Department.objects.all()
     serializer_class= DepartmentSerializer

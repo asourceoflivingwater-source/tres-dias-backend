@@ -138,7 +138,8 @@ REST_FRAMEWORK = {
     
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),    
+    ),  
+    'TEST_REQUEST_DEAFULT_FORMAT': 'json' 
 }
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")

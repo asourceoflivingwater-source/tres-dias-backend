@@ -18,7 +18,6 @@ from .serializers import (DepartmentSectionSerializer,
 from apps.users.permissions import CanEditSection, CanPublishSection, IsChief
 
 
-
 class SectionsView(ListCreateAPIView):
     permission_classes = [IsAdminUser]
     serializer_class = DepartmentSectionSerializer

@@ -1,4 +1,5 @@
 from .models import AuditLog
+from rest_framework.permissions import IsAdminUser
 
 class AuditLogMixin:
     def create_audit_log(self, action, department, section=None, payload=None):
@@ -23,12 +24,14 @@ class AuditLogMixin:
         return None
     
     def get_audit_payload(self, instance):
-        """Создает полезную нагрузку для записи аудита. Должен быть переопределен во вьюхах, если нужна кастомная логика."""
-        return {
+        payload = {
             'id': str(getattr(instance, 'id', None)),
             'model': instance.__class__.__name__,
-            # Добавьте другие общие поля или просто верните {}
-        }
+            }
+        extra_fields = getattr(self, "audit_fields", [])
+        for field in extra_fields:
+            payload[field] = getattr(instance, field, None)
+        return payload
     
     def perform_create(self, serializer):
         # 1. Выполнить создание объекта
@@ -58,3 +61,16 @@ class AuditLogMixin:
         
         # 2. Выполнить удаление объекта
         super().perform_destroy(instance)
+
+
+
+class AdminViewMixin(AuditLogMixin):
+    permission_classes = [IsAdminUser]
+    model = None
+
+    @property
+    def queryset(self):
+        assert self.model is not None, (
+            f"{self.__class__.__name__} must define a 'model' attribute or override 'queryset'."
+        )
+        return self.model.objects.all()
