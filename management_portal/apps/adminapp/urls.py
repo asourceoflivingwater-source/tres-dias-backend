@@ -9,7 +9,7 @@ urlpatterns=[
     path("admin/department-comments/<uuid:id>/", CommentDetailView.as_view(), name="comment_details_view"),
     path("admin/department-comments/<uuid:comment_id>/attachments/", 
         CommentAttachmentsView.as_view(), name="comment_attachments_view"),
-    path("admin/department-comments/<uuid:comment_id>/attachments/<uuid:attachment_id>/",
+    path("admin/department-comments/<uuid:comment_id>/attachments/<uuid:id>/",
         CommentAttachmentsDetailView.as_view(), name="atachments_detail_view"),
     
 ]

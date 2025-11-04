@@ -1,6 +1,6 @@
 from .models import AuditLog
 from rest_framework.permissions import IsAdminUser
-
+import uuid
 class AuditLogMixin:
     def create_audit_log(self, action, department, section=None, payload=None):
         "Создает запись аудита"
@@ -30,7 +30,13 @@ class AuditLogMixin:
             }
         extra_fields = getattr(self, "audit_fields", [])
         for field in extra_fields:
-            payload[field] = getattr(instance, field, None)
+            value = getattr(instance, field, None)
+            # Handle related objects and UUIDs safely
+            if isinstance(value, uuid.UUID):
+                value = str(value)
+            elif hasattr(value, "id"):  # related model
+                value = str(value.id)
+            payload[field] = value
         return payload
     
     def perform_create(self, serializer):

@@ -21,11 +21,11 @@ class CommentView(AdminViewMixin, ListCreateAPIView):
 
 class CommentDetailView(AdminViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
-    model = CommentAttachment
+    model = Comment
     audit_fields = ['label', 'body']
     lookup_field = 'id'
         
-class CommentAttachmentsView(AuditLogMixin, ListCreateAPIView): 
+class CommentAttachmentsView(AdminViewMixin, ListCreateAPIView): 
     serializer_class = CommentAttachmentSerializer
     model = CommentAttachment
     audit_fields = ['file_url', 'filename', 'comment_id']
