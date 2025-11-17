@@ -48,7 +48,8 @@ INSTALLED_APPS = [
     "apps.users",
     "apps.sections",
     "apps.adminapp",
-    "storages"
+    "storages",
+    'drf_spectacular'
 ]
 
 MIDDLEWARE = [
@@ -139,7 +140,16 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),  
-    'TEST_REQUEST_DEAFULT_FORMAT': 'json' 
+    'TEST_REQUEST_DEAFULT_FORMAT': 'json',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'DEpartment Project API',
+    'DESCRIPTION': 'Documentation for Department Project API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,  # Set to True to include schema in Swagger UI
+    
 }
 
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")

@@ -16,7 +16,7 @@ from .serializers import (DepartmentSectionSerializer,
                           VersionSectionSerializer)
 
 from apps.users.permissions import CanEditSection, CanPublishSection, IsChief
-
+from datetime import datetime
 
 class SectionsView(ListCreateAPIView):
     permission_classes = [IsAdminUser]
@@ -43,7 +43,8 @@ class SectionsPublishView(UpdateAPIView):
                             content_published=serializer.validated_data.get(
                                 "content_draft", section.content_draft
                                 ) or {},
-                            content_draft=[]
+                            content_draft=[],
+                            published_at=datetime.now()
                             )
         last_version = section.versions.aggregate(Max("version"))["version__max"] or 0
         new_version = last_version + 1
@@ -56,7 +57,7 @@ class SectionsPublishView(UpdateAPIView):
             )
      
 class SectionPermissionEditView(UpdateAPIView):
-    permission_classes = [IsAdminUser|IsChief]
+    permission_classes = [IsChief]
     serializer_class = SectionPermissionSerializer
     queryset = SectionPermission.objects.all()
 
@@ -69,7 +70,7 @@ class SectionPermissionEditView(UpdateAPIView):
         return obj
     
 class SectionVersionsView(ListAPIView):
-    permission_classes = [IsAdminUser|IsChief]
+    permission_classes = [IsChief]
     serializer_class = VersionSectionSerializer
     
     def get_queryset(self):
@@ -91,7 +92,7 @@ class SectionVersionRevertView(APIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 class MediaUploadView(ListCreateAPIView):
-    permission_classes = [IsAdminUser| IsChief]
+    permission_classes = [IsChief]
     serializer_class = MediaAssetSerializer
     queryset = MediaAsset.objects.all()
     

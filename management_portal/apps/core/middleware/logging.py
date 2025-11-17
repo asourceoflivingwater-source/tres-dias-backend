@@ -2,7 +2,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 handler = logging.StreamHandler()
-formatter =  logging.Formatter(fmt="%(asctime)s %(levelname)s; %(message)s")
+formatter =  logging.Formatter(fmt='%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s')
 handler.formatter = formatter
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)

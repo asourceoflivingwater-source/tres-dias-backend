@@ -2,7 +2,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 
-from .mixins import AuditLogMixin, AdminViewMixin
+from .mixins import AdminViewMixin
 from .serializers import CommentSerializer, CommentAttachmentSerializer
 from .models import Comment, CommentAttachment
 

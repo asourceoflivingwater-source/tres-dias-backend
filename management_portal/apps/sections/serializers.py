@@ -3,6 +3,7 @@ from rest_framework import serializers
 from .models import DepartmentSection, VersionedSection, MediaAsset, SectionPermission
 
 class DepartmentSectionSerializer(ModelSerializer):
+   
     class Meta:
         model = DepartmentSection
         fields = ["id", "department","type", "title", 
@@ -13,13 +14,13 @@ class DepartmentSectionSerializer(ModelSerializer):
 class VersionSectionSerializer(ModelSerializer):
     class Meta:
         model = VersionedSection
-        fields = ['id', 'section', 'version', 'content', 'created_at'],
+        fields = ['id', 'section', 'version', 'content', 'created_at']
         read_only_fields = ["id", ]
         
 class SectionPermissionSerializer(ModelSerializer):
     class Meta:
         model = SectionPermission
-        fields = ['id', 'section', 'role', 'can_view', 'can_edit', 'can_publish'],
+        fields = ['id', 'section', 'role', 'can_view', 'can_edit', 'can_publish']
         read_only_fields = ["id", ]
 
 class MediaAssetSerializer(ModelSerializer):
