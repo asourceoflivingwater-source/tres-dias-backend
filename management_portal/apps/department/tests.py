@@ -58,6 +58,7 @@ class RoleScopedSectionsTest(DepartmentSectionsTest):
         self.user = User.objects.create_user(username='testuser', password='12345', email='test@mail.ru' ,is_staff=False)
         self.department_member = DepartmentMember.objects.create(role='assistant', user=self.user, department=self.department)
         self.client.force_authenticate(user=self.user)
+        
     def test_get_sections(self):
         url = reverse('department_sections_view', kwargs={'slug': self.department.slug})
         response = self.client.get(url)

@@ -173,4 +173,11 @@ STORAGES = {
     }
 }
 
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://{os.getenv("REDIS_USER")}:{os.getenv("REDIS_USER_PASSWORD")}@redis:6379"
+    }
+}
+
 EXCEPTION_HANDLER='rest_framework.views.exception_handler'
