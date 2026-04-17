@@ -16,6 +16,11 @@ dependencies = [
     "setuptools (>=80.9.0,<81.0.0)",
     "drf-spectacular (>=0.29.0,<0.30.0)",
     "psycopg2-binary (>=2.9.11,<3.0.0)",
+    "redis (>=7.0.1,<8.0.0)",
+    "awscli (>=1.44.70,<2.0.0)",
+    "pydot (>=4.0.1,<5.0.0)",
+    "factory-boy (>=3.3.3,<4.0.0)",
+    "python-slugify (>=8.0.4,<9.0.0)",
 ]
 
 [build-system]

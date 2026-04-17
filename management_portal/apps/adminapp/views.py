@@ -6,33 +6,37 @@ from .mixins import AdminViewMixin
 from .serializers import CommentSerializer, CommentAttachmentSerializer
 from .models import Comment, CommentAttachment
 
+
 class CommentView(AdminViewMixin, ListCreateAPIView):
     serializer_class = CommentSerializer
     model = Comment
-    pagination_class= LimitOffsetPagination
-    filter_backends = [SearchFilter] 
-    search_fields = ['author__email', 'author_role', 'department__slug']
-    audit_fields = ['label', 'body']
-    filterset_fields = {  
-        'created_at': ['gte', 'lte'],
-        'department_id': ['exact'],
-        'label': ['icontains']
+    pagination_class = LimitOffsetPagination
+    filter_backends = [SearchFilter]
+    search_fields = ["author__email", "author_role", "department__slug"]
+    audit_fields = ["department", "author", "label", "body", "tags", "meta"]
+    filterset_fields = {
+        "created_at": ["gte", "lte"],
+        "department_id": ["exact"],
+        "label": ["icontains"],
     }
+
 
 class CommentDetailView(AdminViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = CommentSerializer
     model = Comment
-    audit_fields = ['label', 'body']
-    lookup_field = 'id'
-        
-class CommentAttachmentsView(AdminViewMixin, ListCreateAPIView): 
+    audit_fields = ["department", "author", "label", "body", "tags", "meta"]
+    lookup_field = "id"
+
+
+class CommentAttachmentsView(AdminViewMixin, ListCreateAPIView):
     serializer_class = CommentAttachmentSerializer
     model = CommentAttachment
-    audit_fields = ['file_url', 'filename', 'comment_id']
+    audit_fields = ["file_url", "filename", "comment", "meta"]
+    pagination_class = LimitOffsetPagination
+
 
 class CommentAttachmentsDetailView(AdminViewMixin, RetrieveUpdateDestroyAPIView):
     serializer_class = CommentAttachmentSerializer
     model = CommentAttachment
-    lookup_field = 'id'
-    audit_fields = ['file_url', 'filename', 'comment_id']
-
+    lookup_field = "id"
+    audit_fields = ["file_url", "filename", "comment", "meta"]

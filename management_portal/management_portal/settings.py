@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY')
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -41,15 +41,15 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'rest_framework',
-    'rest_framework_simplejwt',
+    "rest_framework",
+    "rest_framework_simplejwt",
     "apps.department",
     "apps.core",
     "apps.users",
     "apps.sections",
     "apps.adminapp",
     "storages",
-    'drf_spectacular'
+    "drf_spectacular",
 ]
 
 MIDDLEWARE = [
@@ -60,7 +60,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "apps.core.middleware.logging.LoggingMiddleware"
+    "apps.core.middleware.logging.LoggingMiddleware",
 ]
 
 ROOT_URLCONF = "management_portal.urls"
@@ -93,7 +93,7 @@ DATABASES = {
         "USER": os.getenv("POSTGRES_USER"),
         "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
         "HOST": "db",
-        "PORT": "5432", 
+        "PORT": "5432",
     }
 }
 
@@ -115,7 +115,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = "users.User" 
+AUTH_USER_MODEL = "users.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -139,22 +139,20 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
-    
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),  
-    'TEST_REQUEST_DEAFULT_FORMAT': 'json',
-    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ),
+    "TEST_REQUEST_DEAFULT_FORMAT": "json",
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 SPECTACULAR_SETTINGS = {
-    'TITLE': 'DEpartment Project API',
-    'DESCRIPTION': 'Documentation for Department Project API',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,  # Set to True to include schema in Swagger UI
-    
+    "TITLE": "Department Project API",
+    "DESCRIPTION": "Documentation for Department Project API",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,  # Set to True to include schema in Swagger UI
 }
-
+"""
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
@@ -163,21 +161,37 @@ AWS_S3_CUSTOM_DOMAIN = os.getenv("AWS_S3_CUSTOM_DOMAIN")
 AWS_S3_FILE_OVERWRITE = False
 
 STORAGES = {
-    
-    "default": {
-        "BACKEND":"storages.backends.s3boto3.S3StaticStorage"
-    },
-
-    "staticfiles": {
-        "BACKEND":"storages.backends.s3boto3.S3StaticStorage"
-    }
+    "default": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
+    "staticfiles": {"BACKEND": "storages.backends.s3boto3.S3StaticStorage"},
 }
-
+"""
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-        "LOCATION": f"redis://{os.getenv("REDIS_USER")}:{os.getenv("REDIS_USER_PASSWORD")}@redis:6379"
+        "LOCATION": f"redis://{os.getenv("REDIS_USER")}:{os.getenv("REDIS_USER_PASSWORD")}@redis:6379",
     }
 }
 
-EXCEPTION_HANDLER='rest_framework.views.exception_handler'
+STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# Media files (Uploaded files)
+MEDIA_URL = "media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Storage Configuration (Updated to Local)
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+EXCEPTION_HANDLER = "rest_framework.views.exception_handler"
