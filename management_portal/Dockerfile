@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED=1
 RUN pip install poetry
 RUN pip install poetry-plugin-export
 
-COPY ../pyproject.toml ../poetry.lock* /app/
+COPY pyproject.toml poetry.lock /app/
 
 # Export dependencies to requirements.txt
 RUN poetry export -f requirements.txt --output requirements.txt --without-hashes

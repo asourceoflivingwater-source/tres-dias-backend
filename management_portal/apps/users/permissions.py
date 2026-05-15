@@ -1,9 +1,6 @@
 from rest_framework.permissions import BasePermission, IsAuthenticated
 from apps.department.models import Department, DepartmentMember
-from apps.sections.models import DepartmentSection
-from logging import getLogger
-from rest_framework.permissions import BasePermission
-from django.shortcuts import get_object_or_404
+from apps.sections.models import DepartmentSection, SectionPermission
 
 
 class IsStaffOrSuperuser(IsAuthenticated):
@@ -29,11 +26,19 @@ class IsChief(IsStaffOrSuperuser):
         if super().has_permission(request, view):
             return True
         if request.user.is_authenticated:
-            try:
-                member = DepartmentMember.objects.get(user=request.user.id)    
-                return member.role == 'chief' 
-            except DepartmentMember.DoesNotExist:
-                return False
+            department_id = (
+                view.kwargs.get("department_id")
+                or view.kwargs.get("id")
+                or getattr(view, "department_id", None)
+            )
+            qs = DepartmentMember.objects.filter(
+                user=request.user,
+                role="chief",
+                is_active=True,
+            )
+            if department_id:
+                qs = qs.filter(department_id=department_id)
+            return qs.exists()
         return False
 
 class CanEditSection(IsChief):
@@ -42,46 +47,70 @@ class CanEditSection(IsChief):
         if super().has_permission(request, view):
             return True
 
-        # Only allow for update actions
-        if request.method not in ("PATCH", "PUT"):
+        section_id = view.kwargs.get("section_id") or view.kwargs.get("id")
+        if not section_id:
             return False
-
-        section_id = view.kwargs.get("section_id")
-
         try:
-            member = DepartmentMember.objects.get(user=request.user, is_active=True)
-            section = DepartmentSection.objects.filter(id=section_id).first()
-        except DepartmentMember.DoesNotExist:
+            section = DepartmentSection.objects.select_related("department").get(pk=section_id)
+        except DepartmentSection.DoesNotExist:
             return False
-        
-        return member.role == "chief" or member.role in section.allow_edit_roles
+        member = DepartmentMember.objects.filter(
+            user=request.user,
+            department=section.department,
+            is_active=True,
+        ).first()
+        if not member:
+            return False
+        perm = SectionPermission.objects.filter(
+            section=section, role=member.role
+        ).first()
+        return bool(perm and perm.can_edit)
     
 class CanPublishSection(IsChief):
     def has_permission(self, request, view):
         if super().has_permission(request, view):
             return True
-        
-        section_id = view.kwargs.get("section_id") 
 
-        try:
-            member = DepartmentMember.objects.get(user=request.user, is_active=True)
-            section = DepartmentSection.objects.filter(id=section_id).first()
-        except DepartmentMember.DoesNotExist():
+        section_id = view.kwargs.get("section_id") or view.kwargs.get("id")
+        if not section_id:
             return False
-        
-        return member.role in section.allow_publish_roles or member.role=="chief"
+        try:
+            section = DepartmentSection.objects.select_related("department").get(pk=section_id)
+        except DepartmentSection.DoesNotExist:
+            return False
+        member = DepartmentMember.objects.filter(
+            user=request.user,
+            department=section.department,
+            is_active=True,
+        ).first()
+        if not member:
+            return False
+        perm = SectionPermission.objects.filter(
+            section=section, role=member.role
+        ).first()
+        return bool(perm and perm.can_publish)
 
 class CanViewSection(IsRectorateOrClergy):
     def has_permission(self, request, view):
         if super().has_permission(request, view):
             return True
         
-        section_id = view.kwargs.get("section_id") 
-        try:
-            member = DepartmentMember.objects.get(user=request.user, is_active=True)
-            section = DepartmentSection.objects.filter(id=section_id).first()
-        except DepartmentMember.DoesNotExist:
+        section_id = view.kwargs.get("section_id") or view.kwargs.get("id")
+        if not section_id:
             return False
-        
-        return member.role in section.visible_for_roles or member.role=='chief'
+        try:
+            section = DepartmentSection.objects.select_related("department").get(pk=section_id)
+        except DepartmentSection.DoesNotExist:
+            return False
+        member = DepartmentMember.objects.filter(
+            user=request.user,
+            department=section.department,
+            is_active=True,
+        ).first()
+        if not member:
+            return False
+        perm = SectionPermission.objects.filter(
+            section=section, role=member.role
+        ).first()
+        return bool(perm and perm.can_view)
     

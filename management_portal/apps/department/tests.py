@@ -7,6 +7,7 @@ from apps.core.tests.factories.department import (
     DepartmentFactory,
     DepartmentMemberFactory,
 )
+from apps.sections.models import SectionPermission
 
 
 class UserSetUpTest(APITestCase):
@@ -51,6 +52,16 @@ class DepartmentMemberTest(UserSetUpTest):
         self.assertEqual(response.data["role"], data["role"])
 
 
+def _set_visibility(section, visibility, viewable_roles=None):
+    """Helper: set section visibility and configure SectionPermission for role_scoped."""
+    section.visibility = visibility
+    section.save(update_fields=["visibility"])
+    if visibility == "role_scoped" and viewable_roles:
+        for perm in SectionPermission.objects.filter(section=section):
+            perm.can_view = perm.role in viewable_roles
+            perm.save(update_fields=["can_view"])
+
+
 class DepartmentSectionsTest(UserSetUpTest):
     def setUp(self):
         super().setUp()
@@ -59,34 +70,37 @@ class DepartmentSectionsTest(UserSetUpTest):
         )
         section_configs = [
             {"type": "HOME", "visibility": "public"},
-            {"type": "TEAM-INFO", "visibility": "members"},
+            {"type": "TEAM_INFO", "visibility": "members"},
             {"type": "INTERACTIONS", "visibility": "members"},
             {
-                "type": "CHIEF-INFO",
-                "visibility": "role_based",
-                "visible_for_roles": ["chief", "assistant"],
-            },
-            {
-                "type": "TEAM_INFO",
-                "visibility": "role_based",
-                "visible_for_roles": ["team_member", "chief", "assistant", "secretary"],
+                "type": "CHIEF_INFO",
+                "visibility": "role_scoped",
+                "viewable_roles": ["chief", "assistant"],
             },
             {
                 "type": "ASSISTANT_INFO",
-                "visibility": "role_based",
-                "visible_for_roles": ["chief", "assistant", "admin"],
+                "visibility": "role_scoped",
+                "viewable_roles": ["chief", "assistant", "admin"],
             },
             {
                 "type": "SECRETARY_INFO",
-                "visibility": "role_based",
-                "visible_for_roles": ["chief", "assistant", "admin"],
+                "visibility": "role_scoped",
+                "viewable_roles": ["chief", "assistant", "admin"],
+            },
+            {
+                "type": "MEDIA",
+                "visibility": "role_scoped",
+                "viewable_roles": ["team_member", "chief", "assistant", "secretary"],
             },
         ]
 
-        self.sections = [
-            SectionFactory(department=self.department, **config)
-            for config in section_configs
-        ]
+        self.sections = []
+        for config in section_configs:
+            viewable_roles = config.pop("viewable_roles", None)
+            sec = SectionFactory(department=self.department, **config)
+            if viewable_roles:
+                _set_visibility(sec, config["visibility"], viewable_roles)
+            self.sections.append(sec)
 
     def test_sections_anon(self):
         response = self.client.get(self.url)
@@ -112,4 +126,4 @@ class DepartmentSectionsTest(UserSetUpTest):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 4)
         visible_types = [item["type"] for item in response.data]
-        self.assertIn("TEAM_INFO", visible_types)
+        self.assertIn("MEDIA", visible_types)

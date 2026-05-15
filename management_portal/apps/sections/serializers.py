@@ -6,10 +6,10 @@ class DepartmentSectionSerializer(ModelSerializer):
    
     class Meta:
         model = DepartmentSection
-        fields = ["id", "department","type", "title", 
-                  "content_draft", "content_published", "visibility", "visible_for_roles", 
-                  "allow_edit_roles", "allow_publish_roles", "status"]
-        read_only_fields = ["id", ]
+        fields = ["id", "department", "type", "title",
+                  "content_draft", "content_published", "visibility",
+                  "status", "updated_by", "published_by", "published_at"]
+        read_only_fields = ["id", "updated_by", "published_by", "published_at"]
         
 class VersionSectionSerializer(ModelSerializer):
     class Meta:

@@ -2,13 +2,16 @@ from .models import VersionedSection, SectionPermission
 from django.shortcuts import get_object_or_404
 from django.db.models import Max
 from .models import SectionStatus
-from datetime import datetime
+from django.utils import timezone
+from apps.adminapp.models import AuditLog
 
 
 class VersionedSectionService:
+    @staticmethod
     def get_version_sections(section_id):
-        return VersionedSection.objects.filter(section_id)
+        return VersionedSection.objects.filter(section_id=section_id)
 
+    @staticmethod
     def revert_section_version(request, section_id, version):
         versioned_section = get_object_or_404(
             VersionedSection, section_id=section_id, version=version
@@ -16,9 +19,22 @@ class VersionedSectionService:
         section = versioned_section.section
 
         section.content_published = versioned_section.content
-        section.status = "published"
+        section.status = SectionStatus.PUBLISHED
         section.published_by = request.user
+        section.published_at = timezone.now()
         section.save()
+
+        AuditLog.objects.create(
+            actor=request.user,
+            department=section.department,
+            section=section,
+            action="revert_version",
+            payload={
+                "section_id": str(section.id),
+                "reverted_to_version": version,
+                "reverted_by": str(request.user.id),
+            },
+        )
 
         return section
 
@@ -35,8 +51,8 @@ class SectionService:
                 "content_draft", section.content_draft
             )
             or {},
-            content_draft=[],
-            published_at=datetime.now(),
+            content_draft={},
+            published_at=timezone.now(),
         )
         last_version = section.versions.aggregate(Max("version"))["version__max"] or 0
         new_version = last_version + 1
@@ -44,22 +60,27 @@ class SectionService:
         VersionedSection.objects.create(
             section=section,
             version=new_version,
-            content=serializer.validated_data.get(
-                "content_published", section.content_published
-            )
-            or {},
+            content=section.content_published,
             published_by=request.user,
+        )
+
+        AuditLog.objects.create(
+            actor=request.user,
+            department=section.department,
+            section=section,
+            action="publish_section",
+            payload={
+                "section_id": str(section.id),
+                "version": new_version,
+            },
         )
 
 
 class SectionPermissionService:
     @staticmethod
     def get_section_permission(section_id, role):
-
-        obj = get_object_or_404(
-            SectionPermission.objects.all(),
+        return get_object_or_404(
+            SectionPermission,
             section_id=section_id,
             role=role,
         )
-
-        return obj

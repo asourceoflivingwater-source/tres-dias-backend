@@ -88,5 +88,11 @@ class SectionVersionRevertView(APIView):
 class MediaUploadView(ListCreateAPIView):
     permission_classes = [IsChief]
     serializer_class = MediaAssetSerializer
-    queryset = MediaAsset.objects.all()
     pagination_class = LimitOffsetPagination
+
+    def get_queryset(self):
+        department_id = self.request.query_params.get("department_id")
+        qs = MediaAsset.objects.all()
+        if department_id:
+            qs = qs.filter(department_id=department_id)
+        return qs

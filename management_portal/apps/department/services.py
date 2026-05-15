@@ -1,5 +1,5 @@
 from .models import DepartmentMember
-from ..sections.models import DepartmentSection
+from ..sections.models import DepartmentSection, SectionPermission
 from django.db.models import Q
 
 
@@ -20,10 +20,14 @@ class DepartmentSectionsService:
         criteria = Q(visibility="public")
 
         if member:
-
             criteria |= Q(visibility="members")
+            viewable_section_ids = SectionPermission.objects.filter(
+                role=member.role,
+                can_view=True,
+                section__department__slug=slug,
+            ).values_list("section_id", flat=True)
             criteria |= Q(
-                visibility="role_based", visible_for_roles__icontains=member.role
+                visibility="role_scoped", id__in=viewable_section_ids
             )
 
         return DepartmentSection.objects.filter(
@@ -33,42 +37,3 @@ class DepartmentSectionsService:
     @staticmethod
     def get_all_sections(slug):
         return DepartmentSection.objects.filter(department__slug=slug)
-
-    """
-    def get_available_sections(request):
-        user = request.user
-        role = None
-
-        if user.is_staff:
-            return DepartmentSection.objects.all()
-
-        if user.is_authenticated:
-            role = DepartmentMember.objects.get(user=user).role
-
-        department_slug = request.kwargs.get("slug")
-
-        mandatory_filters = {
-            "department__slug": department_slug,
-            "status": "published",
-        }
-
-        visibility_criteria = Q(visibility="public")
-
-        if user.is_authenticated:
-
-            member_sections_q = Q(
-                visibility="members",
-                department__members__user=user,
-            )
-
-        if user.is_authenticated and role:
-            staff_sections_q = Q(
-                visibility="role_based", visible_for_roles__icontains=role
-            )
-
-            visibility_criteria |= staff_sections_q or member_sections_q
-
-        queryset = DepartmentSection.objects.filter(**mandatory_filters).filter(
-            visibility_criteria
-        )
-    """

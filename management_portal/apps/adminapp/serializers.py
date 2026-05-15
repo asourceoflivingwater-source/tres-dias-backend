@@ -23,9 +23,12 @@ class CommentSerializer(StaffModelSerializer):
             "body",
             "tags",
             "meta",
+            "is_admin_only",
+            "created_at",
         ]
         read_only_fields = [
             "id",
+            "created_at",
         ]
 
 

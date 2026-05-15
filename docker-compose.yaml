@@ -11,20 +11,17 @@ services:
     depends_on:
       - db 
       - redis
+    # Только loopback + нестандартный порт: не конкурирует с чужими :8000 на хосте и не открыт в LAN
     ports:
-      - "8000:8000"  
+      - "127.0.0.1:18080:8000"
 
   db:
     image: postgres:latest
-    ports:
-      - "5432:5432"
     env_file: .env
 
   redis:
     image: redis:latest
     env_file: .env
-    ports:
-      - "6379:6379"
     command: >
       sh -c '
         mkdir -p /usr/local/etc/redis &&

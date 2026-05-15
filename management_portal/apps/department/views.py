@@ -1,10 +1,9 @@
 from rest_framework.generics import (
     ListCreateAPIView,
-    ListCreateAPIView,
     RetrieveUpdateDestroyAPIView,
     ListAPIView,
 )
-from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser
 from .models import Department, DepartmentMember
 from .serializers import DepartmentSerializer, DepartmentMemberSerializer
 from .services import DepartmentSectionsService
@@ -15,10 +14,14 @@ from rest_framework.pagination import LimitOffsetPagination
 
 
 class DepartmentsListView(ListCreateAPIView):
-    permission_classes = [AllowAny]
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
     pagination_class = LimitOffsetPagination
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsAdminUser()]
 
 
 class DepartmentProfileView(RetrieveUpdateDestroyAPIView):
@@ -40,6 +43,23 @@ class DepartmentMemberView(ListCreateAPIView):
         context = super().get_serializer_context()
         context["department_id"] = self.kwargs.get("department_id")
         return context
+
+    def get_queryset(self):
+        department_id = self.kwargs.get("department_id")
+        if not department_id:
+            return DepartmentMember.objects.none()
+        qs = DepartmentMember.objects.filter(department_id=department_id)
+        user = self.request.user
+        if not user.is_staff:
+            is_chief_here = DepartmentMember.objects.filter(
+                user=user,
+                department_id=department_id,
+                role="chief",
+                is_active=True,
+            ).exists()
+            if not is_chief_here:
+                return DepartmentMember.objects.none()
+        return qs
 
 
 class DepartmentMemberUpdateView(RetrieveUpdateDestroyAPIView):

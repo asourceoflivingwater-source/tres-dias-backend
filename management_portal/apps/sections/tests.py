@@ -60,7 +60,9 @@ class SectionAPITests(TestUserSetup, APITestCase):
         self.assertEqual(DepartmentSection.objects.count(), 2)
         new_section = DepartmentSection.objects.last()
         self.assertEqual(new_section.status, SectionStatus.DRAFT)
-        self.assertEqual(new_section.visible_for_roles, [])
+        self.assertEqual(
+            SectionPermission.objects.filter(section=new_section).count(), 6
+        )
 
     @patch("apps.users.permissions.CanEditSection.has_permission", return_value=True)
     def test_allowed_user_can_update_section_draft_content(self, mock_permission):
@@ -158,11 +160,6 @@ class CustomLogicAPITests(TestUserSetup, APITestCase):
         self.permission.refresh_from_db()
         self.assertFalse(self.permission.can_edit)
         self.assertTrue(self.permission.can_publish)
-
-        # Check if the DepartmentSection object was synced via the SectionPermission save() method
-        self.section.refresh_from_db()
-        self.assertIn("chief", self.section.allow_publish_roles)
-        self.assertNotIn("chief", self.section.allow_edit_roles)
 
     ## 6. SectionVersionRevertView (APIView - Requires IsAdminUser)
 

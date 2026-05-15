@@ -40,11 +40,9 @@ class AuditLogMixin:
         return payload
     
     def perform_create(self, serializer):
-        # 1. Выполнить создание объекта
-        instance = serializer.save()
         super().perform_create(serializer)
+        instance = serializer.instance
         
-        # 2. Аудит после создания
         department = self.get_audit_department(instance)
         payload = self.get_audit_payload(instance)
         self.create_audit_log(f"create {instance.__class__.__name__.lower()}", department, payload=payload)
@@ -74,9 +72,8 @@ class AdminViewMixin(AuditLogMixin):
     permission_classes = [IsAdminUser]
     model = None
 
-    @property
-    def queryset(self):
+    def get_queryset(self):
         assert self.model is not None, (
-            f"{self.__class__.__name__} must define a 'model' attribute or override 'queryset'."
+            f"{self.__class__.__name__} must define a 'model' attribute or override 'get_queryset'."
         )
         return self.model.objects.all()
