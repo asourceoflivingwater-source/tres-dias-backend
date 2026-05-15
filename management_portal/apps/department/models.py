@@ -19,6 +19,9 @@ class Department(BaseModel):
     description = models.TextField(blank=True)
     chief = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='headed_departments')
 
+    def __str__(self):
+        return f"{self.title} ({self.pk})"
+
 class DepartmentMember(BaseModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='department_memberships')
     department = models.ForeignKey(Department, on_delete=models.CASCADE, related_name='members')
